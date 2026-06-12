@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.database import connect_db, close_db
 from app.routes import customers, orders, campaigns, ai_routes, dashboard
+from app.routes import marketing_agent, analytics, predictions, templates
 
 
 @asynccontextmanager
@@ -32,6 +33,10 @@ app.include_router(orders.router)
 app.include_router(campaigns.router)
 app.include_router(ai_routes.router)
 app.include_router(dashboard.router)
+app.include_router(marketing_agent.router)
+app.include_router(analytics.router)
+app.include_router(predictions.router)
+app.include_router(templates.router)
 
 
 @app.get("/")

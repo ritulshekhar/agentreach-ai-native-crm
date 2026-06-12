@@ -60,3 +60,12 @@ async def get_customer(customer_id: str):
             "orders": orders
         }
     }
+
+
+@router.get("/{customer_id}/360", response_model=dict)
+async def get_customer_360(customer_id: str):
+    """Customer 360 view: full profile, orders, campaign history, attribution."""
+    data = await customer_repo.get_customer_360(customer_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return {"success": True, "data": data}

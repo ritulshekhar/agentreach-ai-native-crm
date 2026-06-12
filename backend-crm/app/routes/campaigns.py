@@ -54,6 +54,9 @@ async def campaign_analytics(campaign_id: str):
 @router.post("/receipt", response_model=dict)
 async def receive_delivery_receipt(receipt: ReceiptIn):
     """Callback endpoint for channel service to report delivery status."""
+    from app.repositories.analytics_repo import AnalyticsRepository
+    analytics_repo = AnalyticsRepository()
+
     doc = {
         "campaign_id": receipt.campaign_id,
         "customer_id": receipt.customer_id,
@@ -61,5 +64,20 @@ async def receive_delivery_receipt(receipt: ReceiptIn):
         "status": receipt.status,
         "timestamp": datetime.utcnow(),
     }
+    if receipt.order_value is not None:
+        doc["order_value"] = receipt.order_value
+
     await campaign_repo.save_receipt(doc)
+
+    # If purchased, also persist to purchased_events for revenue attribution
+    if receipt.status == "purchased" and receipt.order_value:
+        purchased_doc = {
+            "campaign_id": receipt.campaign_id,
+            "customer_id": receipt.customer_id,
+            "channel": receipt.channel,
+            "order_value": receipt.order_value,
+            "timestamp": datetime.utcnow(),
+        }
+        await analytics_repo.save_purchased_event(purchased_doc)
+
     return {"success": True}
