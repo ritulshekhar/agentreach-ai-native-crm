@@ -5,7 +5,7 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47A248?logo=mongodb)](https://mongodb.com)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 
-A production-ready AI-Native CRM platform with intelligent audience segmentation, multi-channel campaign management, and real-time delivery analytics.
+A production-ready AI-Native CRM platform with intelligent audience segmentation, multi-channel campaign management, real-time delivery analytics, and an autonomous Marketing Agent that turns business goals into campaign strategies.
 
 ## Architecture
 
@@ -35,6 +35,7 @@ graph TB
         Orders[(orders)]
         Campaigns[(campaigns)]
         Receipts[(delivery_receipts)]
+        Purchased[(purchased_events)]
     end
 
     UI -->|"/api/*"| BackendCRM
@@ -53,8 +54,9 @@ ai-powered-crm-platform/
 ├── frontend/                     # React + Vite + Tailwind CSS
 │   └── src/
 │       ├── api/                  # Axios API clients
-│       ├── components/           # Shared UI components
-│       └── pages/                # Dashboard, Customers, Orders, Segments, Campaigns, Analytics, AIAssistant
+│       ├── components/           # Shared UI components (CampaignFunnel, PredictionPanel, etc.)
+│       └── pages/                # Dashboard, Customers, CustomerDetail (360), Orders, Segments,
+│                                 # Campaigns, Analytics, AIAssistant, MarketingAgent
 │
 ├── backend-crm/                  # Main CRM FastAPI (port 8000)
 │   ├── app/
@@ -66,9 +68,30 @@ ai-powered-crm-platform/
 │   ├── main.py
 │   └── seed_data.py              # 100 customers + 500 orders
 │
+│   └── main.py
+│
 └── backend-channel-service/      # Channel microservice (port 8001)
     └── main.py
 ```
+
+## Features
+
+### Core CRM
+- Customer management (create, list, detail)
+- Order management with revenue aggregation
+- Multi-channel campaign dispatch (WhatsApp, SMS, Email, RCS)
+- Real-time delivery receipt tracking
+
+### AI & Automation
+- **AI Audience Builder** — natural language to MongoDB filter
+- **Marketing Agent** — enter a business goal, get a complete campaign strategy (audience + channel + message + estimated reach)
+- **Campaign Performance Predictions** — pre-launch estimates for open rate, CTR, conversion rate, and revenue
+- **Smart Channel Recommendation** — heuristic engine recommends optimal channel per audience profile
+- **Campaign Templates** — 5 predefined templates (Reactivation, Upsell, Win-back, First Purchase, Festival Promo)
+- **Audience Insights** — segment-level analytics: avg spend, city distribution, spend buckets, repeat rate
+- **Campaign Funnel Analytics** — 6-stage funnel: sent → delivered → opened → read → clicked → purchased
+- **Revenue Attribution** — tracks purchased events per campaign; ranks campaigns by attributed revenue
+- **Customer 360 View** — full profile with order history, campaign engagement timeline, and attribution
 
 ## Tech Stack
 
@@ -79,6 +102,7 @@ ai-powered-crm-platform/
 | Database | MongoDB 7.0, Motor (async driver) |
 | HTTP Client | httpx (async) |
 | Deployment | Vercel (frontend), Render (backend) |
+
 
 ## Getting Started
 
