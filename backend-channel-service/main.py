@@ -40,16 +40,20 @@ DELIVERY_FLOW = {
         ("delivered", 0.3),
         ("read", 0.6),
         ("clicked", 0.9),
+        ("purchased", 1.4),
     ],
     "sms": [
         ("sent", 0.1),
         ("delivered", 0.5),
+        ("clicked", 1.2),
+        ("purchased", 1.8),
     ],
     "email": [
         ("sent", 0.2),
         ("delivered", 0.6),
         ("opened", 1.0),
         ("clicked", 1.5),
+        ("purchased", 2.2),
     ],
     "rcs": [
         ("sent", 0.1),
@@ -57,6 +61,7 @@ DELIVERY_FLOW = {
         ("opened", 0.7),
         ("read", 1.0),
         ("clicked", 1.3),
+        ("purchased", 1.9),
     ]
 }
 
@@ -90,16 +95,25 @@ async def simulate_delivery(campaign_id: str, customer_id: str, channel: str):
 
         for status, delay in flow:
             await asyncio.sleep(delay + random.uniform(0, 0.5))
-            await send_receipt(client, {
+
+            payload = {
                 "campaign_id": campaign_id,
                 "customer_id": customer_id,
                 "channel": channel,
                 "status": status,
-                "timestamp": datetime.utcnow().isoformat()
-            })
+                "timestamp": datetime.utcnow().isoformat(),
+            }
 
-            # Random drop-off after each stage
-            if status != "sent" and random.random() < 0.35:
+            # Attach a simulated order value for purchased events
+            if status == "purchased":
+                # Realistic order values between Rs.500 and Rs.8000
+                payload["order_value"] = round(random.uniform(500, 8000), 2)
+
+            await send_receipt(client, payload)
+
+            # Random drop-off after each stage (more aggressive for purchase)
+            drop_rate = 0.50 if status == "clicked" else 0.35
+            if status != "sent" and random.random() < drop_rate:
                 break
 
 
