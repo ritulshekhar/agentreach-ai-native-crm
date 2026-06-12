@@ -22,7 +22,9 @@ async def connect_db():
     await db.orders.create_index("customer_id")
     await db.campaigns.create_index("campaign_id", unique=True)
     await db.delivery_receipts.create_index("campaign_id")
-    print(f"✅ Connected to MongoDB: {DB_NAME}")
+    await db.purchased_events.create_index("campaign_id")
+    await db.purchased_events.create_index("customer_id")
+    print(f"Connected to MongoDB: {DB_NAME}")
 
 
 async def close_db():

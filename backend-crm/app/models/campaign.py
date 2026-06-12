@@ -40,6 +40,7 @@ class DeliveryStatus(str, Enum):
     opened = "opened"
     read = "read"
     clicked = "clicked"
+    purchased = "purchased"
 
 
 class DeliveryReceipt(BaseModel):
@@ -55,4 +56,13 @@ class ReceiptIn(BaseModel):
     customer_id: str
     channel: str
     status: str
+    timestamp: str
+    order_value: Optional[float] = None  # set when status == purchased
+
+
+class PurchasedEvent(BaseModel):
+    campaign_id: str
+    customer_id: str
+    channel: str
+    order_value: float
     timestamp: str
