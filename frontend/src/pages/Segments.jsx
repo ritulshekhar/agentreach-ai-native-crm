@@ -3,6 +3,7 @@ import { aiApi } from '../api'
 import PageHeader from '../components/PageHeader'
 import { Search, Users, Sparkles, Filter, ChevronDown } from 'lucide-react'
 import { format } from 'date-fns'
+import AudienceInsightPanel from '../components/AudienceInsightPanel'
 
 const EXAMPLE_QUERIES = [
   'Customers who spent more than ₹5000',
@@ -20,16 +21,29 @@ export default function Segments() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [history, setHistory] = useState([])
+  const [insights, setInsights] = useState(null)
+  const [insightLoading, setInsightLoading] = useState(false)
 
   const handleSearch = async (q = prompt) => {
     if (!q.trim()) return
     setLoading(true)
     setError('')
+    setInsights(null)
     try {
       const res = await aiApi.buildAudience(q)
       const data = res.data.data
       setResult(data)
       setHistory(h => [{ prompt: q, count: data.audience_count, description: data.description }, ...h.slice(0, 4)])
+      // Fetch audience insights in parallel
+      setInsightLoading(true)
+      try {
+        const insightRes = await aiApi.audienceInsights(data.mongo_filter)
+        setInsights(insightRes.data.data)
+      } catch {
+        // Insights are non-critical — fail silently
+      } finally {
+        setInsightLoading(false)
+      }
     } catch (e) {
       setError('Failed to build audience. Please try again.')
     } finally {
@@ -161,6 +175,9 @@ export default function Segments() {
           )}
         </div>
       )}
+
+      {/* Audience Insights */}
+      <AudienceInsightPanel insights={insights} loading={insightLoading} />
 
       {/* History */}
       {history.length > 0 && (

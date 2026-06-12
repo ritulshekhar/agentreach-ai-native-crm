@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { customersApi } from '../api'
 import PageHeader from '../components/PageHeader'
 import Modal from '../components/Modal'
@@ -151,9 +152,9 @@ function CustomerDetail({ customerId, onClose }) {
 export default function Customers() {
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
-  const [selected, setSelected] = useState(null)
   const [page, setPage] = useState(0)
   const limit = 20
+  const navigate = useNavigate()
 
   const { data, isLoading } = useQuery({
     queryKey: ['customers', page],
@@ -220,7 +221,7 @@ export default function Customers() {
                   </tr>
                 ))
               ) : filtered.map(c => (
-                <tr key={c.customer_id} onClick={() => setSelected(c.customer_id)}>
+                <tr key={c.customer_id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/customers/${c.customer_id}`)}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
@@ -278,11 +279,6 @@ export default function Customers() {
       {/* Add Modal */}
       <Modal isOpen={showAdd} onClose={() => setShowAdd(false)} title="Add Customer">
         <AddCustomerForm onSuccess={() => setShowAdd(false)} onClose={() => setShowAdd(false)} />
-      </Modal>
-
-      {/* Detail Modal */}
-      <Modal isOpen={!!selected} onClose={() => setSelected(null)} title="Customer Details">
-        <CustomerDetail customerId={selected} onClose={() => setSelected(null)} />
       </Modal>
     </div>
   )

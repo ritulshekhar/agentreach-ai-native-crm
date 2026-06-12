@@ -1,17 +1,18 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, ShoppingBag, Target,
-  Megaphone, BarChart3, Bot, Zap
+  Megaphone, BarChart3, Bot, Zap, Brain
 } from 'lucide-react'
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard',   path: '/' },
-  { icon: Users,           label: 'Customers',   path: '/customers' },
-  { icon: ShoppingBag,     label: 'Orders',      path: '/orders' },
-  { icon: Target,          label: 'Segments',    path: '/segments' },
-  { icon: Megaphone,       label: 'Campaigns',   path: '/campaigns' },
-  { icon: BarChart3,       label: 'Analytics',   path: '/analytics' },
-  { icon: Bot,             label: 'AI Assistant',path: '/assistant' },
+  { icon: LayoutDashboard, label: 'Dashboard',        path: '/' },
+  { icon: Users,           label: 'Customers',        path: '/customers' },
+  { icon: ShoppingBag,     label: 'Orders',           path: '/orders' },
+  { icon: Target,          label: 'Segments',         path: '/segments' },
+  { icon: Brain,           label: 'Marketing Agent',  path: '/agent' },
+  { icon: Megaphone,       label: 'Campaigns',        path: '/campaigns' },
+  { icon: BarChart3,       label: 'Analytics',        path: '/analytics' },
+  { icon: Bot,             label: 'AI Assistant',     path: '/assistant' },
 ]
 
 export default function Sidebar() {

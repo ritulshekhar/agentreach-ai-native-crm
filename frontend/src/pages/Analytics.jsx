@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { campaignsApi } from '../api'
+import { campaignsApi, analyticsApi } from '../api'
 import PageHeader from '../components/PageHeader'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend,
-  RadarChart, Radar, PolarGrid, PolarAngleAxis
 } from 'recharts'
-import { Send, CheckCircle, XCircle, Eye, BookOpen, MousePointer } from 'lucide-react'
+import { Send, CheckCircle, XCircle, Eye, BookOpen, MousePointer, ShoppingCart, DollarSign, TrendingUp } from 'lucide-react'
+import CampaignFunnel from '../components/CampaignFunnel'
 
 const STATUS_COLORS = {
   sent:      '#818cf8',
@@ -15,6 +15,7 @@ const STATUS_COLORS = {
   opened:    '#fbbf24',
   read:      '#22d3ee',
   clicked:   '#a78bfa',
+  purchased: '#f472b6',
 }
 
 const STATUS_ICONS = {
@@ -24,6 +25,7 @@ const STATUS_ICONS = {
   opened:    Eye,
   read:      BookOpen,
   clicked:   MousePointer,
+  purchased: ShoppingCart,
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -47,14 +49,30 @@ export default function Analytics() {
     refetchInterval: 15000,
   })
 
-  // Aggregate totals
-  const totals = { sent: 0, delivered: 0, failed: 0, opened: 0, read: 0, clicked: 0 }
-
-  data?.forEach(c => {
-    if (c.analytics) {
-      Object.keys(totals).forEach(k => { totals[k] += c.analytics[k] || 0 })
-    }
+  const { data: overallFunnel } = useQuery({
+    queryKey: ['overall-funnel'],
+    queryFn: () => analyticsApi.overallFunnel().then(r => r.data.data),
+    refetchInterval: 15000,
   })
+
+  const { data: topCampaigns } = useQuery({
+    queryKey: ['top-campaigns'],
+    queryFn: () => analyticsApi.topCampaigns(5).then(r => r.data.data),
+    refetchInterval: 30000,
+  })
+
+  // Aggregate totals
+  const totals = { sent: 0, delivered: 0, failed: 0, opened: 0, read: 0, clicked: 0, purchased: 0 }
+
+  if (overallFunnel) {
+    Object.keys(totals).forEach(k => { totals[k] = overallFunnel[k] || 0 })
+  } else {
+    data?.forEach(c => {
+      if (c.analytics) {
+        Object.keys(totals).forEach(k => { totals[k] += c.analytics[k] || 0 })
+      }
+    })
+  }
 
   // Per-campaign chart data
   const campaignData = data?.slice(0, 8).map(c => ({
@@ -157,7 +175,7 @@ export default function Analytics() {
 
       {/* Channel Usage */}
       {channelData.length > 0 && (
-        <div className="glass-card" style={{ padding: 24 }}>
+        <div className="glass-card" style={{ padding: 24, marginBottom: 24 }}>
           <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 20, fontFamily: 'Outfit' }}>
             Channel Usage (Total Audience Reached)
           </div>
@@ -170,6 +188,57 @@ export default function Analytics() {
               <Bar dataKey="count" fill="#6366f1" radius={4} name="Audience" />
             </BarChart>
           </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Overall Funnel */}
+      {overallFunnel && (
+        <div className="glass-card" style={{ padding: 24, marginBottom: 24 }}>
+          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 15, marginBottom: 20 }}>Overall Campaign Funnel</div>
+          <CampaignFunnel
+            data={['sent','delivered','opened','read','clicked','purchased'].map((stage, i, arr) => {
+              const count = overallFunnel[stage] || 0
+              const prev = i > 0 ? (overallFunnel[arr[i-1]] || 0) : count
+              return {
+                stage,
+                count,
+                conversion_from_prev_pct: i > 0 ? (prev > 0 ? Math.round(count / prev * 100 * 10) / 10 : 0) : 100,
+              }
+            })}
+          />
+        </div>
+      )}
+
+      {/* Top Revenue Campaigns */}
+      {topCampaigns?.length > 0 && (
+        <div className="glass-card" style={{ padding: 24 }}>
+          <div style={{ fontFamily: 'Outfit', fontWeight: 700, fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <DollarSign size={16} color="#34d399" /> Top Revenue Campaigns
+          </div>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Channel</th>
+                <th>Audience</th>
+                <th>Orders</th>
+                <th>Revenue</th>
+                <th>AOV</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topCampaigns.map(c => (
+                <tr key={c.campaign_id}>
+                  <td style={{ fontWeight: 600 }}>{c.name}</td>
+                  <td style={{ textTransform: 'uppercase', fontSize: 12 }}>{c.channel}</td>
+                  <td>{c.audience_count?.toLocaleString()}</td>
+                  <td>{c.orders}</td>
+                  <td style={{ fontWeight: 700, color: '#34d399' }}>₹{c.revenue?.toLocaleString()}</td>
+                  <td style={{ color: 'var(--text-muted)' }}>₹{c.avg_order_value?.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

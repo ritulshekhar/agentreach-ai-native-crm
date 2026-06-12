@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { campaignsApi, aiApi } from '../api'
+import { campaignsApi, aiApi, templatesApi, predictionsApi } from '../api'
 import PageHeader from '../components/PageHeader'
 import Modal from '../components/Modal'
-import { Plus, Megaphone, MessageSquare, Mail, Phone, Zap, ChevronRight, Sparkles } from 'lucide-react'
+import { Plus, Megaphone, MessageSquare, Mail, Phone, Zap, ChevronRight, Sparkles, LayoutTemplate } from 'lucide-react'
 import { format } from 'date-fns'
+import TemplateCard from '../components/TemplateCard'
+import PredictionPanel from '../components/PredictionPanel'
 
 const CHANNELS = [
   { value: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, color: '#25d366' },
@@ -34,7 +36,16 @@ function CreateCampaignForm({ onSuccess, onClose }) {
   const [nlpPrompt, setNlpPrompt] = useState('')
   const [nlpLoading, setNlpLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showTemplates, setShowTemplates] = useState(false)
+  const [prediction, setPrediction] = useState(null)
+  const [predLoading, setPredLoading] = useState(false)
   const qc = useQueryClient()
+
+  const { data: templates = [] } = useQuery({
+    queryKey: ['templates'],
+    queryFn: () => templatesApi.list().then(r => r.data.data),
+    staleTime: Infinity,
+  })
 
   const mutation = useMutation({
     mutationFn: (data) => campaignsApi.create(data),
@@ -61,6 +72,33 @@ function CreateCampaignForm({ onSuccess, onClose }) {
   const selectPreset = (preset) => {
     setForm(p => ({ ...p, audience_filter: preset.filter, audience_description: preset.desc }))
     setAudienceCount(null)
+    setPrediction(null)
+  }
+
+  const applyTemplate = (tpl) => {
+    setForm(p => ({
+      ...p,
+      name: p.name || tpl.name,
+      audience_filter: tpl.audience_filter,
+      audience_description: tpl.audience_description,
+      channel: tpl.channel,
+      message: tpl.message,
+    }))
+    setShowTemplates(false)
+    setPrediction(null)
+    setAudienceCount(null)
+  }
+
+  const getPrediction = async () => {
+    setPredLoading(true)
+    try {
+      const res = await predictionsApi.campaign(form.channel, form.audience_filter)
+      setPrediction(res.data.data)
+    } catch {
+      // non-critical
+    } finally {
+      setPredLoading(false)
+    }
   }
 
   const handleSubmit = (e) => {
@@ -71,11 +109,35 @@ function CreateCampaignForm({ onSuccess, onClose }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: 4 }}>
+    <form onSubmit={handleSubmit} style={{ maxHeight: '72vh', overflowY: 'auto', paddingRight: 4 }}>
       {error && (
         <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#f87171' }}>{error}</div>
       )}
 
+      {/* Template Picker */}
+      <div style={{ marginBottom: 16 }}>
+        <button
+          type="button"
+          onClick={() => setShowTemplates(v => !v)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            fontSize: 12, color: '#818cf8', background: 'rgba(99,102,241,0.08)',
+            border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8, padding: '6px 12px',
+            cursor: 'pointer', fontWeight: 600,
+          }}
+        >
+          <LayoutTemplate size={13} /> Start from a template
+        </button>
+        {showTemplates && templates.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
+            {templates.map(tpl => (
+              <TemplateCard key={tpl.id} template={tpl} onSelect={applyTemplate} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Campaign Name */}
       <div style={{ marginBottom: 16 }}>
         <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-muted)', marginBottom: 6 }}>Campaign Name *</label>
         <input className="input" placeholder="Summer Re-engagement" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
@@ -151,8 +213,19 @@ function CreateCampaignForm({ onSuccess, onClose }) {
         />
       </div>
 
+      {/* Prediction */}
+      {prediction && <PredictionPanel prediction={prediction} channel={form.channel} />}
+
       <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
         <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
+        <button
+          type="button" className="btn-secondary"
+          onClick={getPrediction} disabled={predLoading}
+          style={{ color: '#818cf8' }}
+        >
+          {predLoading ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <Zap size={14} />}
+          Predict
+        </button>
         <button type="submit" className="btn-primary" disabled={mutation.isPending}>
           {mutation.isPending ? <span className="spinner" /> : <Megaphone size={16} />}
           Launch Campaign

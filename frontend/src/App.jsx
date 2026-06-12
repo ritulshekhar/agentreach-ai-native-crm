@@ -3,11 +3,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import Customers from './pages/Customers'
+import CustomerDetail from './pages/CustomerDetail'
 import Orders from './pages/Orders'
 import Segments from './pages/Segments'
 import Campaigns from './pages/Campaigns'
 import Analytics from './pages/Analytics'
 import AIAssistant from './pages/AIAssistant'
+import MarketingAgent from './pages/MarketingAgent'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,13 +34,15 @@ export default function App() {
             overflowX: 'hidden',
           }}>
             <Routes>
-              <Route path="/"           element={<Dashboard />} />
-              <Route path="/customers"  element={<Customers />} />
-              <Route path="/orders"     element={<Orders />} />
-              <Route path="/segments"   element={<Segments />} />
-              <Route path="/campaigns"  element={<Campaigns />} />
-              <Route path="/analytics"  element={<Analytics />} />
-              <Route path="/assistant"  element={<AIAssistant />} />
+              <Route path="/"                   element={<Dashboard />} />
+              <Route path="/customers"          element={<Customers />} />
+              <Route path="/customers/:id"      element={<CustomerDetail />} />
+              <Route path="/orders"             element={<Orders />} />
+              <Route path="/segments"           element={<Segments />} />
+              <Route path="/campaigns"          element={<Campaigns />} />
+              <Route path="/analytics"          element={<Analytics />} />
+              <Route path="/assistant"          element={<AIAssistant />} />
+              <Route path="/agent"              element={<MarketingAgent />} />
             </Routes>
           </main>
         </div>
@@ -46,3 +50,4 @@ export default function App() {
     </QueryClientProvider>
   )
 }
+
