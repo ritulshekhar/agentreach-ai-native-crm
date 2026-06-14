@@ -118,7 +118,7 @@ export default function MarketingAgent() {
           <input
             className="input"
             style={{ flex: 1, fontSize: 15 }}
-            placeholder='e.g. "Reactivate customers who haven\'t bought in 45 days"'
+            placeholder="e.g. &quot;Reactivate customers who haven't bought in 45 days&quot;"
             value={goal}
             onChange={e => setGoal(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAnalyze()}
